@@ -56,9 +56,11 @@ jobs:
 
       - name: Install pgop
         run: |
-          kubectl apply -k "https://github.com/ruckc/pgop/config/crd?ref=v0.4.5"
-          kubectl apply -k "https://github.com/ruckc/pgop/config/default?ref=v0.4.5"
-          kubectl -n pgop-system rollout status deployment/pgop-controller-manager --timeout=180s
+          helm install pgop oci://ghcr.io/ruckc/charts/pgop \
+            --version 0.4.5 \
+            --namespace pgop-system \
+            --create-namespace \
+            --wait --timeout=180s
 
       - name: Install glitchtip-operator CRDs
         run: cargo run --bin crdgen | kubectl apply -f -
