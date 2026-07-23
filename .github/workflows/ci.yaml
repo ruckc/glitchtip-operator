@@ -39,12 +39,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
-        with:
-          toolchain: stable
-
-      - uses: Swatinem/rust-cache@23869a5bd66c73db3c0ac40331f3206eb23791dc # v2.9.1
-
       - name: Create kind cluster
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1.14.0
         with:
@@ -62,17 +56,26 @@ jobs:
             --create-namespace \
             --wait --timeout=180s
 
-      - name: Install glitchtip-operator CRDs
-        run: cargo run --bin crdgen | kubectl apply -f -
+      - name: Build operator image
+        run: docker build -t glitchtip-operator:e2e .
 
-      - name: Build operator
-        run: cargo build --release --bin glitchtip-operator
+      - name: Load operator image into kind
+        run: kind load docker-image glitchtip-operator:e2e --name glitchtip-operator
 
-      - name: Run operator against the kind cluster
+      # Deployed via the Helm chart (not `cargo run` on the runner) so the
+      # operator's live in-cluster HTTP calls (e.g. the bootstrap token ping
+      # at http://<name>-web.<ns>.svc:8000) resolve: that ClusterIP DNS name
+      # only works from inside the cluster's pod network. The chart's crds/
+      # directory installs the glitchtip.ruck.io CRDs as part of the release.
+      - name: Deploy operator via Helm chart
         run: |
-          RUST_LOG=info,kube=warn ./target/release/glitchtip-operator > operator.log 2>&1 &
-          echo $! > operator.pid
-          sleep 2
+          helm install glitchtip-operator charts/glitchtip-operator \
+            --namespace glitchtip-operator-system \
+            --create-namespace \
+            --set image.repository=glitchtip-operator \
+            --set image.tag=e2e \
+            --set image.pullPolicy=Never \
+            --wait --timeout=180s
 
       - name: Run e2e test
         run: hack/e2e.sh
@@ -81,7 +84,7 @@ jobs:
         if: always()
         run: |
           echo "::group::operator logs"
-          cat operator.log || true
+          kubectl logs -n glitchtip-operator-system deployment/glitchtip-operator --tail=1000 | tee operator.log || true
           echo "::endgroup::"
           echo "::group::events"
           kubectl get events -A --sort-by=.lastTimestamp | tail -100 || true
@@ -104,7 +107,3 @@ jobs:
         with:
           name: operator-logs
           path: operator.log
-
-      - name: Stop operator
-        if: always()
-        run: kill "$(cat operator.pid)" 2>/dev/null || true
