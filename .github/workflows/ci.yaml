@@ -89,6 +89,14 @@ jobs:
           echo "::group::glitchtip.ruck.io resources"
           kubectl get glitchtips,glitchtiporganizations,glitchtipteams,glitchtipprojects -A -o wide || true
           echo "::endgroup::"
+          echo "::group::glitchtip status conditions"
+          kubectl get glitchtips -A -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name}:{"\n"}{.status.conditions}{"\n\n"}{end}' || true
+          echo "::endgroup::"
+          echo "::group::web/worker pods"
+          kubectl get pods -n glitchtip -o wide || true
+          kubectl describe pods -n glitchtip -l app.kubernetes.io/component=web || true
+          kubectl describe pods -n glitchtip -l app.kubernetes.io/component=worker || true
+          echo "::endgroup::"
 
       - name: Upload operator logs
         if: failure()
