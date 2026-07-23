@@ -53,19 +53,29 @@ pub async fn ensure(gt: &GlitchTip, ctx: &Ctx) -> Result<DatabaseOutcome> {
     let labels = pgop_labels(gt);
 
     if managed {
+        // Built through the typed ClusterSpec (rather than a raw json! object
+        // with Option fields interpolated directly) so `None` fields are
+        // omitted instead of serializing to explicit `null`, which the pgop
+        // CRD schema rejects for fields without a default (e.g. resources,
+        // storage.storageClassName).
+        let spec = pgop::ClusterSpec {
+            image: db_spec.image.clone(),
+            replicas: Some(1),
+            port: None,
+            storage: pgop::StorageSpec {
+                size: db_spec
+                    .storage_size
+                    .clone()
+                    .unwrap_or_else(|| "10Gi".into()),
+                storage_class_name: db_spec.storage_class_name.clone(),
+            },
+            resources: db_spec.resources.clone(),
+        };
         let manifest = json!({
             "apiVersion": "pgop.ruck.io/v1alpha1",
             "kind": "Cluster",
             "metadata": {"name": cluster, "namespace": ns, "labels": labels},
-            "spec": {
-                "image": db_spec.image,
-                "replicas": 1,
-                "storage": {
-                    "size": db_spec.storage_size.clone().unwrap_or_else(|| "10Gi".into()),
-                    "storageClassName": db_spec.storage_class_name,
-                },
-                "resources": db_spec.resources,
-            },
+            "spec": spec,
         });
         crate::util::apply::apply_json::<pgop::Cluster>(&ctx.client, ns, &cluster, &manifest)
             .await?;
