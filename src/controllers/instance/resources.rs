@@ -58,8 +58,8 @@ pub fn env_json(gt: &GlitchTip) -> serde_json::Value {
     json!(vars)
 }
 
-/// Worker entrypoint: GlitchTip v5+ ships django-vtasks (`run-worker.sh`),
-/// older releases use celery. `spec.worker.command` overrides.
+/// Worker entrypoint: GlitchTip v6+ ships django-vtasks (`run-worker.sh`),
+/// older releases (including v5.x) use celery. `spec.worker.command` overrides.
 fn worker_command(gt: &GlitchTip) -> Vec<String> {
     if let Some(cmd) = gt.spec.worker.as_ref().and_then(|w| w.command.clone()) {
         return cmd;
@@ -72,7 +72,7 @@ fn worker_command(gt: &GlitchTip) -> Vec<String> {
         .next()
         .and_then(|m| m.parse().ok())
         .unwrap_or(5);
-    if major >= 5 {
+    if major >= 6 {
         vec!["./bin/run-worker.sh".into()]
     } else {
         vec!["./bin/run-celery-with-beat.sh".into()]

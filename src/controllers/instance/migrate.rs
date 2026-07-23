@@ -56,7 +56,7 @@ pub async fn ensure(gt: &GlitchTip, ctx: &Ctx, revision: &str) -> Result<JobStat
                     "containers": [{
                         "name": "migrate",
                         "image": gt.image(),
-                        "command": ["./bin/run-migrations.sh"],
+                        "command": ["./bin/run-migrate.sh"],
                         "env": env_json(gt),
                         "envFrom": env_from_json(gt),
                     }],

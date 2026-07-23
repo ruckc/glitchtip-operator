@@ -26,7 +26,7 @@ with teams referenced by `teamRef` or a raw `teamSlug`. See
   pgop's `<database>-<owner>-credentials` Secret.
   `spec.database.deletionPolicy` defaults to `Retain`, so deleting a
   `GlitchTip` CR keeps your data.
-- **Migrations** run as a per-revision Job (`./bin/run-migrations.sh`) and
+- **Migrations** run as a per-revision Job (`./bin/run-migrate.sh`) and
   gate web/worker rollout.
 - **API token bootstrap**: the operator pre-generates a token into
   `<name>-api-token`, then a one-shot Job creates a superuser service account
@@ -84,9 +84,9 @@ cargo run --bin crdgen > charts/glitchtip-operator/crds/glitchtip.ruck.io.yaml
 
 ## Notes / verification points
 
-- Worker command defaults to `./bin/run-worker.sh` for v5+ images and
-  `./bin/run-celery-with-beat.sh` for older tags; override with
-  `spec.worker.command`.
+- Worker command defaults to `./bin/run-worker.sh` for v6+ images and
+  `./bin/run-celery-with-beat.sh` for older tags (including v5.x); override
+  with `spec.worker.command`.
 - The bootstrap Job imports `apps.api_tokens.models.APIToken`; if a future
   GlitchTip release moves that model, the Job logs will say so — override via
   `spec.apiTokenSecretRef` as an escape hatch.
