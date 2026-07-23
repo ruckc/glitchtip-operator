@@ -51,6 +51,10 @@ pub fn env_json(gt: &GlitchTip) -> serde_json::Value {
         json!({"name": "GLITCHTIP_DOMAIN", "value": gt.spec.domain}),
         json!({"name": "DEFAULT_FROM_EMAIL", "value": gt.from_email()}),
         json!({"name": "EMAIL_URL", "value": gt.email_url()}),
+        // The web container's uwsgi/uvicorn startup scripts bind to $PORT,
+        // which some glitchtip image tags bake in as 8080 by default; pin it
+        // to WEB_PORT so it always matches containerPort/probes/Service.
+        json!({"name": "PORT", "value": WEB_PORT.to_string()}),
     ];
     for extra in &gt.spec.env {
         vars.push(serde_json::to_value(extra).unwrap_or_default());
