@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use super::common::{DeletionPolicy, SecretKeyRef};
 
 pub const DEFAULT_IMAGE_REPO: &str = "glitchtip/glitchtip";
-pub const DEFAULT_VERSION: &str = "v5.1";
+pub const DEFAULT_VERSION: &str = "v6.2.2";
 pub const WEB_PORT: i32 = 8000;
 
 /// A full GlitchTip deployment: web + worker Deployments, migration and
@@ -28,10 +28,10 @@ pub const WEB_PORT: i32 = 8000;
 )]
 #[serde(rename_all = "camelCase")]
 pub struct GlitchTipSpec {
-    /// GlitchTip image tag, e.g. "v5.1". Ignored when `image` is set.
+    /// GlitchTip image tag, e.g. "v6.2.2". Ignored when `image` is set.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
-    /// Full image override, e.g. "glitchtip/glitchtip:v5.1.5".
+    /// Full image override, e.g. "glitchtip/glitchtip:v6.2.2".
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub image: Option<String>,
     /// Public URL of the instance including scheme (GLITCHTIP_DOMAIN).

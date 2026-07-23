@@ -269,7 +269,7 @@ spec:
                 nullable: true
                 type: string
               image:
-                description: Full image override, e.g. "glitchtip/glitchtip:v5.1.5".
+                description: Full image override, e.g. "glitchtip/glitchtip:v6.2.2".
                 nullable: true
                 type: string
               route:
@@ -366,7 +366,7 @@ spec:
                     type: object
                 type: object
               version:
-                description: GlitchTip image tag, e.g. "v5.1". Ignored when `image` is set.
+                description: GlitchTip image tag, e.g. "v6.2.2". Ignored when `image` is set.
                 nullable: true
                 type: string
               web:

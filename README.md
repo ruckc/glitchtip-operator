@@ -32,8 +32,10 @@ with teams referenced by `teamRef` or a raw `teamSlug`. See
   `<name>-api-token`, then a one-shot Job creates a superuser service account
   and inserts the token via `manage.py shell`. Pre-existing instances can
   supply `spec.apiTokenSecretRef` instead.
-- **Valkey** is optional (`spec.valkey.enabled`) — GlitchTip v5+ can use
-  PostgreSQL as its task broker.
+- **Valkey** is optional (`spec.valkey.enabled`) — GlitchTip v5.2+ can use
+  PostgreSQL as its cache/celery/session backend instead. When disabled, the
+  operator sets `VALKEY_URL=""` (explicitly empty, not merely unset) to
+  activate it; versions before v5.2 have no such fallback and require Valkey.
 - **HTTPRoute** (`spec.route`) attaches the web Service to your Gateway; if
   the Gateway API CRDs are absent the instance reports
   `Ready=False/GatewayAPIUnavailable` instead of crashing.

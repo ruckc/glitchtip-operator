@@ -150,6 +150,11 @@ async fn apply(gt: Arc<GlitchTip>, ctx: Arc<Ctx>) -> Result<Action> {
         )
         .await?;
         config.insert("VALKEY_URL".to_string(), resources::valkey_url(&gt));
+    } else {
+        // An explicitly empty VALKEY_URL (not merely unset, which falls back
+        // to redis://redis:6379/0) is what activates GlitchTip's Postgres
+        // cache/celery/session backend, available since v5.2.
+        config.insert("VALKEY_URL".to_string(), String::new());
     }
     secrets::apply_secret(
         &ctx.client,
