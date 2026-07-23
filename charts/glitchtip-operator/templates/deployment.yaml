@@ -42,6 +42,11 @@ spec:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             runAsNonRoot: true
+            # distroless:nonroot's USER is the named "nonroot" account, not a
+            # numeric UID, so the kubelet can't verify runAsNonRoot against
+            # the image alone (CreateContainerConfigError); pin its known UID.
+            runAsUser: 65532
+            runAsGroup: 65532
             capabilities:
               drop: ["ALL"]
       {{- with .Values.nodeSelector }}
