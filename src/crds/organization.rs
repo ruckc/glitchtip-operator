@@ -26,7 +26,10 @@ pub struct GlitchTipOrganizationSpec {
     /// Display name; defaults to metadata.name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    /// Requested slug; when unset GlitchTip derives one from the name.
+    /// Slug of a pre-existing organization to adopt, looked up via the
+    /// GlitchTip API instead of the CR name. Has no effect on creation:
+    /// GlitchTip's organization API only accepts `name` and always derives
+    /// the slug from it server-side, ignoring any client-supplied slug.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub slug: Option<String>,
     #[serde(default)]
@@ -55,8 +58,9 @@ impl GlitchTipOrganization {
             .unwrap_or_else(|| self.metadata.name.clone().unwrap_or_default())
     }
 
-    /// Slug to look up / request: status takes precedence (authoritative),
-    /// then spec.slug, then the CR name.
+    /// Slug to look up by: status takes precedence (authoritative, set once
+    /// GlitchTip has assigned the real slug on create), then spec.slug (for
+    /// adopting a pre-existing org), then the CR name as an initial guess.
     pub fn desired_slug(&self) -> String {
         self.status
             .as_ref()

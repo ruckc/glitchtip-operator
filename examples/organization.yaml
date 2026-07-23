@@ -7,7 +7,9 @@ spec:
   instanceRef:
     name: glitchtip          # namespace defaults to this CR's namespace
   name: Acme Corp
-  # slug: acme               # defaults to metadata.name
+  # slug: acme               # only for adopting an existing org by slug;
+                              # GlitchTip always derives the slug of a new
+                              # org from `name` and ignores this on create
   deletionPolicy: Delete
 ---
 apiVersion: glitchtip.ruck.io/v1alpha1

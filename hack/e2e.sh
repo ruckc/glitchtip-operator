@@ -46,17 +46,21 @@ echo "    SENTRY_DSN=$DSN"
 
 echo ">>> verifying org via the GlitchTip API"
 TOKEN=$(kubectl get secret -n "$NS_INSTANCE" glitchtip-api-token -o jsonpath='{.data.token}' | base64 -d)
+# GlitchTip always derives the slug from the org's display name ("Acme Corp"
+# -> "acme-corp") and ignores any client-requested slug on create, so read
+# back the real slug the operator observed rather than assuming metadata.name.
+ORG_SLUG=$(kubectl get glitchtiporganization -n "$NS_INSTANCE" acme -o jsonpath='{.status.slug}')
 kubectl port-forward -n "$NS_INSTANCE" svc/glitchtip-web 18000:8000 >/dev/null 2>&1 &
 PF_PID=$!
 trap 'kill $PF_PID 2>/dev/null || true' EXIT
 sleep 3
 ORGS=$(curl -sf -H "Authorization: Bearer $TOKEN" http://127.0.0.1:18000/api/0/organizations/)
-echo "$ORGS" | grep -q '"slug":"acme"' || { echo "org acme not found: $ORGS"; exit 1; }
+echo "$ORGS" | grep -q "\"slug\":\"$ORG_SLUG\"" || { echo "org $ORG_SLUG not found: $ORGS"; exit 1; }
 
 echo ">>> deleting project and asserting API-side cleanup"
 kubectl delete -n "$NS_APP" glitchtipproject/my-app --wait --timeout=120s
 sleep 2
-if curl -sf -H "Authorization: Bearer $TOKEN" http://127.0.0.1:18000/api/0/projects/acme/my-app/ >/dev/null; then
+if curl -sf -H "Authorization: Bearer $TOKEN" "http://127.0.0.1:18000/api/0/projects/$ORG_SLUG/my-app/" >/dev/null; then
   echo "project still exists in GlitchTip after CR deletion"; exit 1
 fi
 
