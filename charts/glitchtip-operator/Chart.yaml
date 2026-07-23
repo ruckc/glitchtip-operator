@@ -1,0 +1,12 @@
+apiVersion: v2
+name: glitchtip-operator
+description: >-
+  Kubernetes operator that deploys GlitchTip instances (PostgreSQL via pgop,
+  optional Valkey, Gateway API HTTPRoute) and manages organizations, teams and
+  projects declaratively, delivering per-project DSNs as Secrets.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/ruckc/glitchtip-operator
+sources:
+  - https://github.com/ruckc/glitchtip-operator

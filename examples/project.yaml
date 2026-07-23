@@ -1,0 +1,22 @@
+# Lives in the consuming application's namespace. The operator creates the
+# project + client key in GlitchTip and writes the DSN into a Secret next to
+# this CR, ready to be mounted by the app.
+apiVersion: glitchtip.ruck.io/v1alpha1
+kind: GlitchTipProject
+metadata:
+  name: my-app
+  namespace: my-app
+spec:
+  organizationRef:
+    name: acme
+    namespace: glitchtip     # cross-namespace reference to the org CR
+  teamRef:
+    name: backend
+    namespace: glitchtip
+  # teamSlug: backend        # alternative to teamRef
+  platform: python-django
+  secret:
+    # name: my-app-glitchtip-dsn   # default: <cr-name>-glitchtip-dsn
+    dsnKey: SENTRY_DSN
+    extraDsnKeys: [GLITCHTIP_DSN]
+  deletionPolicy: Delete

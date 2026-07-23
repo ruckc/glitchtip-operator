@@ -1,0 +1,21 @@
+apiVersion: glitchtip.ruck.io/v1alpha1
+kind: GlitchTipOrganization
+metadata:
+  name: acme
+  namespace: glitchtip
+spec:
+  instanceRef:
+    name: glitchtip          # namespace defaults to this CR's namespace
+  name: Acme Corp
+  # slug: acme               # defaults to metadata.name
+  deletionPolicy: Delete
+---
+apiVersion: glitchtip.ruck.io/v1alpha1
+kind: GlitchTipTeam
+metadata:
+  name: backend
+  namespace: glitchtip
+spec:
+  organizationRef:
+    name: acme
+  deletionPolicy: Delete

@@ -1,0 +1,6 @@
+[tools]
+claude = "latest"
+gh = "latest"
+helm = "latest"
+kubectl = "latest"
+rust = "latest"

@@ -1,0 +1,75 @@
+name: e2e
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    # kind cluster bring-up + real image pulls (postgres, glitchtip) can take
+    # a while; hack/e2e.sh alone budgets ~30m of kubectl wait time.
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+        with:
+          toolchain: stable
+
+      - uses: Swatinem/rust-cache@23869a5bd66c73db3c0ac40331f3206eb23791dc # v2.9.1
+
+      - name: Create kind cluster
+        uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1.14.0
+        with:
+          cluster_name: glitchtip-operator
+
+      - name: Install Gateway API CRDs
+        run: |
+          kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.6.1/standard-install.yaml
+
+      - name: Install pgop
+        run: |
+          kubectl apply -k "https://github.com/ruckc/pgop/config/crd?ref=v0.4.5"
+          kubectl apply -k "https://github.com/ruckc/pgop/config/default?ref=v0.4.5"
+          kubectl -n pgop-system rollout status deployment/pgop-controller-manager --timeout=180s
+
+      - name: Install glitchtip-operator CRDs
+        run: cargo run --bin crdgen | kubectl apply -f -
+
+      - name: Build operator
+        run: cargo build --release --bin glitchtip-operator
+
+      - name: Run operator against the kind cluster
+        run: |
+          RUST_LOG=info,kube=warn ./target/release/glitchtip-operator > operator.log 2>&1 &
+          echo $! > operator.pid
+          sleep 2
+
+      - name: Run e2e test
+        run: hack/e2e.sh
+
+      - name: Dump cluster state
+        if: always()
+        run: |
+          echo "::group::operator logs"
+          cat operator.log || true
+          echo "::endgroup::"
+          echo "::group::events"
+          kubectl get events -A --sort-by=.lastTimestamp | tail -100 || true
+          echo "::endgroup::"
+          echo "::group::glitchtip.ruck.io resources"
+          kubectl get glitchtips,glitchtiporganizations,glitchtipteams,glitchtipprojects -A -o wide || true
+          echo "::endgroup::"
+
+      - name: Upload operator logs
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: operator-logs
+          path: operator.log
+
+      - name: Stop operator
+        if: always()
+        run: kill "$(cat operator.pid)" 2>/dev/null || true

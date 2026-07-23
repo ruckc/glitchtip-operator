@@ -1,0 +1,28 @@
+[package]
+name = "glitchtip-operator"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.104"
+futures = "0.3.33"
+hex = "0.4.3"
+k8s-openapi = { version = "0.28.0", features = ["latest", "schemars"] }
+kube = { version = "4.2.0", default-features = false, features = ["runtime", "derive", "client", "rustls-tls"] }
+percent-encoding = "2.3.2"
+rand = "0.10.2"
+reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls"] }
+schemars = "1.2.1"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+serde_yaml = "0.9.34"
+sha2 = "0.11.0"
+thiserror = "2.0.19"
+tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread", "signal"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+url = "2.5.8"
+
+[dev-dependencies]
+reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls"] }
+wiremock = "0.6.5"

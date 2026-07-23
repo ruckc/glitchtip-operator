@@ -1,0 +1,64 @@
+{{- if .Values.rbac.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "glitchtip-operator.fullname" . }}
+  labels:
+    {{- include "glitchtip-operator.labels" . | nindent 4 }}
+rules:
+  # Own CRDs
+  - apiGroups: ["glitchtip.ruck.io"]
+    resources:
+      - glitchtips
+      - glitchtiporganizations
+      - glitchtipteams
+      - glitchtipprojects
+    verbs: ["get", "list", "watch", "patch", "update"]
+  - apiGroups: ["glitchtip.ruck.io"]
+    resources:
+      - glitchtips/status
+      - glitchtiporganizations/status
+      - glitchtipteams/status
+      - glitchtipprojects/status
+      - glitchtips/finalizers
+      - glitchtiporganizations/finalizers
+      - glitchtipteams/finalizers
+      - glitchtipprojects/finalizers
+    verbs: ["get", "patch", "update"]
+  # PostgreSQL provisioning through pgop
+  - apiGroups: ["pgop.ruck.io"]
+    resources: ["clusters", "roles", "databases"]
+    verbs: ["get", "list", "watch", "create", "patch", "delete"]
+  # DSN Secrets land in arbitrary app namespaces; config/token Secrets in
+  # instance namespaces.
+  - apiGroups: [""]
+    resources: ["secrets", "services"]
+    verbs: ["get", "list", "watch", "create", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "patch", "delete"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["get", "list", "watch", "create", "patch", "delete"]
+  - apiGroups: ["gateway.networking.k8s.io"]
+    resources: ["httproutes"]
+    verbs: ["get", "list", "watch", "create", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "glitchtip-operator.fullname" . }}
+  labels:
+    {{- include "glitchtip-operator.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "glitchtip-operator.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "glitchtip-operator.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}
