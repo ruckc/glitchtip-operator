@@ -8,7 +8,7 @@ metadata:
   name: glitchtip
   namespace: glitchtip
 spec:
-  version: v6.2.2
+  version: 6.2.2
   domain: https://glitchtip.example.com
   fromEmail: glitchtip@example.com
   # emailUrl: smtp://user:pass@smtp.example.com:587
