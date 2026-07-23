@@ -55,7 +55,8 @@ PF_PID=$!
 trap 'kill $PF_PID 2>/dev/null || true' EXIT
 sleep 3
 ORGS=$(curl -sf -H "Authorization: Bearer $TOKEN" http://127.0.0.1:18000/api/0/organizations/)
-echo "$ORGS" | grep -q "\"slug\":\"$ORG_SLUG\"" || { echo "org $ORG_SLUG not found: $ORGS"; exit 1; }
+echo "$ORGS" | jq -e --arg slug "$ORG_SLUG" 'any(.[]; .slug == $slug)' >/dev/null \
+  || { echo "org $ORG_SLUG not found: $ORGS"; exit 1; }
 
 echo ">>> deleting project and asserting API-side cleanup"
 kubectl delete -n "$NS_APP" glitchtipproject/my-app --wait --timeout=120s
