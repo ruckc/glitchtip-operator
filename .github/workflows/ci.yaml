@@ -100,6 +100,12 @@ jobs:
           kubectl describe pods -n glitchtip -l app.kubernetes.io/component=web || true
           kubectl describe pods -n glitchtip -l app.kubernetes.io/component=worker || true
           echo "::endgroup::"
+          echo "::group::web logs"
+          kubectl logs -n glitchtip -l app.kubernetes.io/component=web --tail=1000 --prefix || true
+          echo "::endgroup::"
+          echo "::group::worker logs"
+          kubectl logs -n glitchtip -l app.kubernetes.io/component=worker --tail=1000 --prefix || true
+          echo "::endgroup::"
 
       - name: Upload operator logs
         if: failure()
